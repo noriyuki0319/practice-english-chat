@@ -1,21 +1,26 @@
 'use client'
 
 import { useActionState } from 'react'
-import { signUp } from '@/app/actions/auth'
+import { updatePassword } from '@/app/actions/auth'
 
 /**
- * 新規登録フォームコンポーネント（画面設計書 S-03 に準拠）
- * Server Actionを使用してサーバー側で認証処理を実行します
+ * パスワード更新フォームコンポーネント（画面設計書 S-05 ステップ2 に準拠）
+ * Server Actionを使用してサーバー側でパスワード更新処理を実行します
  */
-export function SignUpForm() {
+export function UpdatePasswordForm() {
   const [state, formAction, isPending] = useActionState<
-    { error?: string } | undefined,
+    { error?: string; success?: string } | undefined,
     FormData
-  >(signUp, undefined)
+  >(updatePassword, undefined)
 
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="bg-white shadow-md rounded-lg px-8 pt-6 pb-8 mb-4">
+        {/* タイトル */}
+        <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">
+          新しいパスワードの設定
+        </h2>
+
         <form action={formAction} className="space-y-5">
           {/* エラーメッセージ */}
           {state?.error && (
@@ -24,36 +29,18 @@ export function SignUpForm() {
             </div>
           )}
 
-          {/* メールアドレス入力 */}
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-gray-700 text-sm font-bold mb-2"
-            >
-              メールアドレス
-            </label>
-            <input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              disabled={isPending}
-                  className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
-              placeholder="example@email.com"
-              data-1p-ignore
-              data-lpignore="true"
-              data-form-type="other"
-            />
-          </div>
+          {/* 説明文 */}
+          <p className="text-gray-600 text-sm mb-4">
+            新しいパスワードを入力してください。パスワードは6文字以上である必要があります。
+          </p>
 
-          {/* パスワード入力 */}
+          {/* 新しいパスワード入力 */}
           <div>
             <label
               htmlFor="password"
               className="block text-gray-700 text-sm font-bold mb-2"
             >
-              パスワード
+              新しいパスワード
             </label>
             <input
               id="password"
@@ -71,13 +58,13 @@ export function SignUpForm() {
             />
           </div>
 
-          {/* パスワード（確認用）入力 */}
+          {/* 新しいパスワード（確認用）入力 */}
           <div>
             <label
               htmlFor="password-confirm"
               className="block text-gray-700 text-sm font-bold mb-2"
             >
-              パスワード（確認用）
+              新しいパスワード（確認用）
             </label>
             <input
               id="password-confirm"
@@ -95,28 +82,22 @@ export function SignUpForm() {
             />
           </div>
 
-          {/* 登録するボタン */}
+          {/* パスワード更新ボタン */}
           <div className="pt-2">
             <button
               type="submit"
               disabled={isPending}
                   className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
             >
-              {isPending ? '登録中...' : '登録する'}
+              {isPending ? '更新中...' : 'パスワードを更新'}
             </button>
           </div>
         </form>
 
-        {/* ログインページへのリンク */}
-        <div className="text-center mt-6">
-          <p className="text-gray-600 text-sm">
-            すでにアカウントをお持ちですか？{' '}
-            <a
-              href="/login"
-                  className="text-green-600 hover:text-green-700 font-semibold underline"
-            >
-              ログイン
-            </a>
+        {/* ヘルプテキスト */}
+        <div className="mt-6 pt-6 border-t border-gray-200">
+          <p className="text-center text-sm text-gray-600">
+            パスワード更新後、新しいパスワードでログインできます
           </p>
         </div>
       </div>

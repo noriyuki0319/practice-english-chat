@@ -59,7 +59,7 @@ export function ResetPasswordForm() {
                 autoComplete="email"
                 required
                 disabled={isPending}
-                className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
+                  className="shadow appearance-none border rounded w-full py-3 px-4 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent disabled:bg-gray-100 disabled:cursor-not-allowed"
                 placeholder="example@email.com"
                 data-1p-ignore
                 data-lpignore="true"
@@ -74,7 +74,7 @@ export function ResetPasswordForm() {
               <button
                 type="submit"
                 disabled={isPending}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors"
               >
                 {isPending ? '送信中...' : '再設定メールを送信'}
               </button>
@@ -86,7 +86,7 @@ export function ResetPasswordForm() {
         <div className="text-center mt-6">
           <a
             href="/login"
-            className="text-sm text-blue-600 hover:text-blue-700 underline"
+            className="text-sm text-green-600 hover:text-green-700 underline"
           >
             ログイン画面に戻る
           </a>
