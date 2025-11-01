@@ -5,15 +5,25 @@ import type { Database } from './database.types'
 /**
  * Middleware用のSupabaseクライアントを作成
  * 認証状態の更新とセッション管理を行います
+ * 環境変数はサーバー側でのみ使用され、クライアントに公開されません
  */
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
   })
 
+  // サーバー専用の環境変数（NEXT_PUBLIC_プレフィックスなし）
+  const supabaseUrl = process.env.SUPABASE_URL
+  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error('Supabase environment variables are not set')
+    return supabaseResponse
+  }
+
   const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {
