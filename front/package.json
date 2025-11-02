@@ -9,11 +9,14 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^2.0.59",
+    "@ai-sdk/react": "^2.0.86",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.78.0",
-    "ai": "^5.0.83",
+    "ai": "^3.4.33",
     "lucide-react": "^0.552.0",
     "next": "16.0.1",
+    "openai-edge": "^1.2.2",
     "react": "19.2.0",
     "react-dom": "19.2.0"
   },
