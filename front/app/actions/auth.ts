@@ -83,23 +83,8 @@ export async function signUp(
 
     console.log('User created successfully:', data.user.id)
 
-    // 登録成功後、profilesテーブルにユーザー情報を作成
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .insert({
-        id: data.user.id,
-        name: email.split('@')[0], // メールアドレスの@より前を初期名前として使用
-      })
-
-    if (profileError) {
-      console.error('Profile creation error:', profileError)
-      // プロフィールテーブルが存在しない可能性があるため、エラーメッセージを返す
-      return {
-        error: `プロフィール作成エラー: ${profileError.message}。データベースのテーブルが作成されているか確認してください。`,
-      }
-    }
-
-    console.log('Profile created successfully')
+    // プロフィールはデータベーストリガーで自動作成されます
+    console.log('Profile will be created automatically by database trigger')
 
     // メール確認が必要な場合のメッセージ
     if (data.user && !data.user.email_confirmed_at) {

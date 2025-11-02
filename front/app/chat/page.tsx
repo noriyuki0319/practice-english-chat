@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import { MainLayout } from '@/app/components/MainLayout'
+import { ChatSidebar } from '@/app/components/ChatSidebar'
 import { ChatMessages } from '@/app/components/ChatMessages'
 
 /**
@@ -19,9 +19,12 @@ export default async function ChatPage() {
   }
 
   return (
-    <MainLayout>
-      <ChatMessages />
-    </MainLayout>
+    <div className="flex min-h-screen bg-gray-50">
+      <ChatSidebar />
+      <main className="flex-1 ml-64">
+        <ChatMessages />
+      </main>
+    </div>
   )
 }
 
