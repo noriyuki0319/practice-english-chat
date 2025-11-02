@@ -2,6 +2,7 @@
 
 import { useChat } from 'ai/react'
 import { Volume2, Bookmark } from 'lucide-react'
+import { useState } from 'react'
 
 /**
  * チャットメッセージコンポーネント
@@ -12,8 +13,103 @@ export function ChatMessages() {
     api: '/api/chat',
   })
 
-  // デバッグ用
-  console.log('input:', input, 'type:', typeof input, 'trimmed:', input?.trim())
+  const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null)
+
+  // 英語の文を抽出する関数
+  const extractEnglishSentences = (text: string): string[] => {
+    const lines = text.split('\n')
+    const englishSentences: string[] = []
+    
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim()
+      
+      // 以下のパターンにマッチする行を英語文として扱う:
+      // - 数字+ピリオド+スペース+英字 (例: "1. Could you...")
+      // - ハイフン+スペース+英字 (例: "- Could you...")
+      // - アスタリスク+スペース+英字 (例: "* Could you...")
+      // - 直接英字で始まる行（大文字） (例: "Could you...")
+      if (
+        /^\d+[\.\)]\s+[A-Z]/.test(line) ||  // 番号付き
+        /^[\-\*]\s+[A-Z]/.test(line) ||      // ハイフンやアスタリスク付き
+        (/^[A-Z][a-z]/.test(line) && line.length > 10) // 大文字で始まる長めの文
+      ) {
+        // 番号やマーカーを除去
+        let sentence = line.replace(/^[\d\-\*]+[\.\)]\s*/, '').trim()
+        
+        // 英語っぽいか確認（アルファベットが50%以上）
+        const alphaCount = (sentence.match(/[a-zA-Z]/g) || []).length
+        if (alphaCount > sentence.length * 0.3) {
+          englishSentences.push(sentence)
+        }
+      }
+    }
+    
+    // デバッグ用
+    console.log('Extracted sentences:', englishSentences)
+    
+    return englishSentences
+  }
+
+  // 音声再生機能
+  const handleSpeak = (messageId: string, text: string) => {
+    // すでに再生中の場合は停止
+    if (speakingMessageId === messageId) {
+      window.speechSynthesis.cancel()
+      setSpeakingMessageId(null)
+      return
+    }
+
+    // 他の音声を停止
+    window.speechSynthesis.cancel()
+
+    // ブラウザが音声合成に対応しているか確認
+    if (!('speechSynthesis' in window)) {
+      alert('お使いのブラウザは音声再生に対応していません。')
+      return
+    }
+
+    // 英語の文を抽出
+    const englishSentences = extractEnglishSentences(text)
+    
+    if (englishSentences.length === 0) {
+      alert('読み上げる英語文が見つかりませんでした。')
+      return
+    }
+
+    setSpeakingMessageId(messageId)
+
+    // 各英語文を順番に読み上げ
+    let currentIndex = 0
+    const speakNext = () => {
+      if (currentIndex >= englishSentences.length) {
+        setSpeakingMessageId(null)
+        return
+      }
+
+      const utterance = new SpeechSynthesisUtterance(englishSentences[currentIndex])
+      utterance.lang = 'en-US' // 英語（アメリカ）
+      utterance.rate = 0.9 // 少しゆっくり
+      
+      utterance.onend = () => {
+        currentIndex++
+        // 次の文がある場合は少し間を空けて再生
+        if (currentIndex < englishSentences.length) {
+          setTimeout(speakNext, 500)
+        } else {
+          setSpeakingMessageId(null)
+        }
+      }
+
+      utterance.onerror = () => {
+        setSpeakingMessageId(null)
+        alert('音声再生中にエラーが発生しました。')
+      }
+
+      window.speechSynthesis.speak(utterance)
+    }
+
+    speakNext()
+  }
 
   return (
     <div className="flex flex-col h-screen">
@@ -56,12 +152,17 @@ export function ChatMessages() {
                   {/* 音声再生とブックマークアイコン */}
                   <div className="flex gap-2 pt-3 border-t border-gray-200">
                     <button
-                      className="flex items-center gap-1 px-3 py-1.5 text-sm text-green-600 hover:bg-green-50 rounded-lg transition-colors"
-                      aria-label="音声再生"
-                      title="音声再生"
+                      onClick={() => handleSpeak(message.id, message.content)}
+                      className={`flex items-center gap-1 px-3 py-1.5 text-sm rounded-lg transition-colors ${
+                        speakingMessageId === message.id
+                          ? 'bg-green-600 text-white'
+                          : 'text-green-600 hover:bg-green-50'
+                      }`}
+                      aria-label={speakingMessageId === message.id ? '停止' : '音声再生'}
+                      title={speakingMessageId === message.id ? '停止' : '音声再生'}
                     >
                       <Volume2 className="w-4 h-4" />
-                      <span>再生</span>
+                      <span>{speakingMessageId === message.id ? '停止' : '再生'}</span>
                     </button>
                     <button
                       className="flex items-center gap-1 px-3 py-1.5 text-sm text-green-600 hover:bg-green-50 rounded-lg transition-colors"
