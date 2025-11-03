@@ -187,29 +187,20 @@ export async function signIn(
 export async function signOut() {
   const supabase = await createClient()
 
-  try {
-    const { error } = await supabase.auth.signOut()
+  const { error } = await supabase.auth.signOut()
 
-    if (error) {
-      console.error('Sign out error:', error)
-      return {
-        error: 'ログアウトに失敗しました',
-      }
-    }
-
-    console.log('User signed out successfully')
-
-    // キャッシュを再検証
-    revalidatePath('/', 'layout')
-    
-    // ログインページにリダイレクト
-    redirect('/login')
-  } catch (error) {
-    console.error('Unexpected error during sign out:', error)
-    return {
-      error: `予期しないエラーが発生しました: ${error instanceof Error ? error.message : '不明なエラー'}`,
-    }
+  if (error) {
+    console.error('Sign out error:', error)
+    // エラーがあってもリダイレクトを実行
   }
+
+  console.log('User signed out successfully')
+
+  // キャッシュを再検証
+  revalidatePath('/', 'layout')
+  
+  // ログインページにリダイレクト
+  redirect('/login')
 }
 
 /**

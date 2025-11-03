@@ -1,9 +1,6 @@
 /**
  * Supabaseデータベースの型定義
  * DB設計書.mdに基づいて定義されています
- * 
- * 実際のSupabaseプロジェクトから型を生成する場合は以下のコマンドを使用:
- * npx supabase gen types typescript --project-id YOUR_PROJECT_ID > lib/supabase/database.types.ts
  */
 
 export type Json =
@@ -45,10 +42,42 @@ export interface Database {
           }
         ]
       }
+      chat_groups: {
+        Row: {
+          id: number // bigint
+          user_id: string // UUID
+          title: string
+          created_at: string // timestamptz
+          updated_at: string // timestamptz
+        }
+        Insert: {
+          id?: number
+          user_id: string
+          title: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          user_id?: string
+          title?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_groups_user_id_fkey"
+            columns: ["user_id"]
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       chat_messages: {
         Row: {
           id: number // bigint
-          user_id: string | null // UUID
+          chat_group_id: number // bigint
+          user_id: string | null // UUID (nullable for AI messages)
           role: string // 'user' or 'ai'
           message: string
           created_at: string // timestamptz
@@ -56,6 +85,7 @@ export interface Database {
         }
         Insert: {
           id?: number
+          chat_group_id: number
           user_id?: string | null
           role: string
           message: string
@@ -64,6 +94,7 @@ export interface Database {
         }
         Update: {
           id?: number
+          chat_group_id?: number
           user_id?: string | null
           role?: string
           message?: string
@@ -72,43 +103,15 @@ export interface Database {
         }
         Relationships: [
           {
+            foreignKeyName: "chat_messages_chat_group_id_fkey"
+            columns: ["chat_group_id"]
+            referencedRelation: "chat_groups"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "chat_messages_user_id_fkey"
             columns: ["user_id"]
             referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
-      }
-      suggestions: {
-        Row: {
-          id: number // bigint
-          chat_message_id: number
-          english_sentence: string
-          japanese_translation: string
-          created_at: string // timestamptz
-          updated_at: string // timestamptz
-        }
-        Insert: {
-          id?: number
-          chat_message_id: number
-          english_sentence: string
-          japanese_translation: string
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: number
-          chat_message_id?: number
-          english_sentence?: string
-          japanese_translation?: string
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "suggestions_chat_message_id_fkey"
-            columns: ["chat_message_id"]
-            referencedRelation: "chat_messages"
             referencedColumns: ["id"]
           }
         ]
@@ -117,21 +120,21 @@ export interface Database {
         Row: {
           id: number // bigint
           user_id: string // UUID
-          suggestion_id: number
+          chat_message_id: number // bigint
           created_at: string // timestamptz
           updated_at: string // timestamptz
         }
         Insert: {
           id?: number
           user_id: string
-          suggestion_id: number
+          chat_message_id: number
           created_at?: string
           updated_at?: string
         }
         Update: {
           id?: number
           user_id?: string
-          suggestion_id?: number
+          chat_message_id?: number
           created_at?: string
           updated_at?: string
         }
@@ -143,26 +146,18 @@ export interface Database {
             referencedColumns: ["id"]
           },
           {
-            foreignKeyName: "bookmarks_suggestion_id_fkey"
-            columns: ["suggestion_id"]
-            referencedRelation: "suggestions"
+            foreignKeyName: "bookmarks_chat_message_id_fkey"
+            columns: ["chat_message_id"]
+            referencedRelation: "chat_messages"
             referencedColumns: ["id"]
           }
         ]
       }
     }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      [_ in never]: never
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
+    Views: {}
+    Functions: {}
+    Enums: {}
+    CompositeTypes: {}
   }
 }
 
