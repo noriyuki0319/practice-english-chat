@@ -2,6 +2,7 @@
 
 import { Volume2, Bookmark } from 'lucide-react'
 import { useState, useRef, useEffect } from 'react'
+import { useSearchParams } from 'next/navigation'
 import {
   saveUserMessage,
   saveAIMessage,
@@ -45,6 +46,9 @@ export function ChatMessagesWithHistory({
   chatGroupTitle,
   initialMessages,
 }: ChatMessagesWithHistoryProps) {
+  const searchParams = useSearchParams()
+  const initialMessage = searchParams.get('initialMessage')
+  
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [suggestionGroups, setSuggestionGroups] = useState<SuggestionGroup[]>([])
@@ -52,6 +56,7 @@ export function ChatMessagesWithHistory({
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set())
   const abortControllersRef = useRef<AbortController[]>([])
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const hasProcessedInitialMessage = useRef(false)
 
   // 初期メッセージを変換してsuggestionGroupsに設定
   useEffect(() => {
@@ -100,6 +105,63 @@ export function ChatMessagesWithHistory({
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [suggestionGroups])
+
+  // initialMessageがある場合、自動的にAIストリーミングを開始
+  useEffect(() => {
+    if (!initialMessage || hasProcessedInitialMessage.current || suggestionGroups.length > 0) {
+      return
+    }
+
+    hasProcessedInitialMessage.current = true
+    
+    const startInitialStreaming = async () => {
+      setIsLoading(true)
+
+      // 新しいグループIDを生成
+      const groupId = `group-${Date.now()}`
+
+      // 3つの提案用のメッセージを初期化
+      const suggestions: Message[] = Array.from({ length: 3 }, (_, i) => ({
+        id: `${groupId}-suggestion-${i}`,
+        role: 'assistant' as const,
+        content: '',
+        isStreaming: true,
+      }))
+
+      // グループを追加
+      setSuggestionGroups([
+        {
+          id: groupId,
+          userMessage: initialMessage,
+          suggestions,
+        },
+      ])
+
+      // 3つの並列ストリーミングリクエストを開始
+      const controllers = suggestions.map(() => new AbortController())
+      abortControllersRef.current = controllers
+
+      try {
+        await Promise.all(
+          suggestions.map((suggestion, index) =>
+            fetchSuggestion(
+              initialMessage,
+              index,
+              groupId,
+              suggestion.id,
+              controllers[index]
+            )
+          )
+        )
+      } catch (error) {
+        console.error('Error in initial streaming:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    startInitialStreaming()
+  }, [initialMessage, suggestionGroups.length])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setInput(e.target.value)

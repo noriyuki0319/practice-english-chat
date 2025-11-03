@@ -174,46 +174,9 @@ export function ChatMessages() {
     // チャットグループIDを保存
     setCurrentChatGroupId(chat_group.id)
 
-    // 新しいグループIDを生成
-    const groupId = `group-${Date.now()}`
-
-    // 3つの提案用のメッセージを初期化
-    const suggestions: Message[] = Array.from({ length: 3 }, (_, i) => ({
-      id: `${groupId}-suggestion-${i}`,
-      role: 'assistant' as const,
-      content: '',
-      isStreaming: true,
-    }))
-
-    // グループを追加
-    setSuggestionGroups((prev) => [
-      ...prev,
-      {
-        id: groupId,
-        userMessage,
-        suggestions,
-        chatGroupId: chat_group.id,
-      },
-    ])
-
-    // 3つの並行ストリーミングリクエストを開始
-    const controllers = suggestions.map(() => new AbortController())
-    abortControllersRef.current = controllers
-
-    const promises = suggestions.map((suggestion, index) =>
-      fetchSuggestion(userMessage, index, groupId, suggestion.id, controllers[index], chat_group.id)
-    )
-
-    try {
-      await Promise.all(promises)
-      
-      // ストリーミング完了後、チャットグループのページに遷移
-      router.push(`/chat/${chat_group.id}`)
-    } catch (error) {
-      console.error('Error in parallel streaming:', error)
-    } finally {
-      setIsLoading(false)
-    }
+    // すぐにチャットグループのページに遷移
+    // ユーザーメッセージをクエリパラメータで渡して即座に表示
+    router.push(`/chat/${chat_group.id}?initialMessage=${encodeURIComponent(userMessage)}`)
   }
 
   // 英語の文を抽出する関数
