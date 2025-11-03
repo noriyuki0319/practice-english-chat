@@ -1,0 +1,6 @@
+---
+alwaysApply: true
+---
+supabaseのクライアントを作成するときは
+front/lib/supabase
+こちらのSupabase用のclientを必ず使ってください。

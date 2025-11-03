@@ -2,6 +2,7 @@
 
 import { Volume2, Bookmark } from 'lucide-react'
 import { useState, useRef } from 'react'
+import { useRouter } from 'next/navigation'
 import { 
   createChatGroupWithMessage, 
   saveAIMessage, 
@@ -29,11 +30,13 @@ interface SuggestionGroup {
 }
 
 export function ChatMessages() {
+  const router = useRouter()
   const [input, setInput] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [suggestionGroups, setSuggestionGroups] = useState<SuggestionGroup[]>([])
   const [speakingMessageId, setSpeakingMessageId] = useState<string | null>(null)
   const [bookmarkedIds, setBookmarkedIds] = useState<Set<string>>(new Set())
+  const [currentChatGroupId, setCurrentChatGroupId] = useState<number | null>(null)
   const abortControllersRef = useRef<AbortController[]>([])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -167,6 +170,9 @@ export function ChatMessages() {
     }
 
     const { chat_group, user_message } = data
+    
+    // チャットグループIDを保存
+    setCurrentChatGroupId(chat_group.id)
 
     // 新しいグループIDを生成
     const groupId = `group-${Date.now()}`
@@ -198,8 +204,16 @@ export function ChatMessages() {
       fetchSuggestion(userMessage, index, groupId, suggestion.id, controllers[index], chat_group.id)
     )
 
-    await Promise.all(promises)
-    setIsLoading(false)
+    try {
+      await Promise.all(promises)
+      
+      // ストリーミング完了後、チャットグループのページに遷移
+      router.push(`/chat/${chat_group.id}`)
+    } catch (error) {
+      console.error('Error in parallel streaming:', error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   // 英語の文を抽出する関数
@@ -350,7 +364,7 @@ export function ChatMessages() {
             <div key={group.id} className="space-y-4">
               {/* ユーザーメッセージ */}
               <div className="flex justify-end">
-                <div className="bg-green-600 text-white rounded-lg shadow-md p-4 max-w-xl">
+                <div className="bg-green-600 text-white rounded-lg shadow-md p-4 max-w-2xl">
                   <p className="whitespace-pre-wrap">{group.userMessage}</p>
                 </div>
               </div>
@@ -359,7 +373,7 @@ export function ChatMessages() {
               <div className="space-y-3">
                 {group.suggestions.map((suggestion) => (
                   <div key={suggestion.id} className="flex justify-start">
-                    <div className="bg-white rounded-lg shadow-md p-4 max-w-xl w-full">
+                    <div className="bg-white rounded-lg shadow-md p-4 max-w-3xl">
                       {suggestion.content ? (
                         <>
                           <div className="whitespace-pre-wrap text-gray-800 mb-3">
